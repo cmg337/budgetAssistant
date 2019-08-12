@@ -1,13 +1,18 @@
 {
   "name": "Budget Master",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Converts prices on websites to percentage of dipsosable income, weekly budget, or hours of work",
   "permissions": [
-    
+    "activeTab",
+    "storage"
   ],
   "browser_action": {
-      "default_title": "Budget Master",
-      "default_popup": "budget.html"
+    "default_title": "Budget Master",
+    "default_popup": "budget.html"
+  },
+  "background": {
+    "scripts": [ "background.js" ],
+    "persistent":  true
   },
   "manifest_version": 2,
   "content_security_policy": "script-src 'self' https://ajax.googleapis.com; object-src 'self'"
