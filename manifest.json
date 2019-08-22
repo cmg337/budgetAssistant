@@ -18,7 +18,7 @@
     {
       "js": [ "content.js" ],
       "run_at": "document_idle",
-      "matches": [ "*://www.amazon.com/*" ]
+      "matches": [ "*://*/*" ]
     }
   ],
   "manifest_version": 2,
