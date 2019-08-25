@@ -5,31 +5,53 @@ const HOURS = 40
 //function that changes element monetary values if it contains any
 convertMoney = function (elem) {
     //reg exp for monetary values
-    dollarRegex = /\$[0-9]+*(\.)?([0-9]*)?/g
-    tagRegex = /img|script/i
+    var dollarRegex = /\$[0-9]+(\.[0-9][0-9])?/
+    var dollarRegexAll = /\$[0-9]+(\.[0-9][0-9])?/g
+    var altRegex = /\$\s[0-9]+(\s[0-9][0-9])?/
+    var altRegexAll = /\$\s[0-9]+(\s[0-9][0-9])?/g
+    var badTagRegex = /img|script/i
+    var goodTagRegex = /span|strong/i
     // if textContent matches regex - disclude containers of any kind scripts and images
-    if (dollarRegex.test(elem.innerText) && !tagRegex.test(elem.tagName)) {
-        console.log(elem.tagName)
-		// get price and convert to number
-        var cost = elem.innerText.match(dollarRegex)[0];
-        var costInt = cost.replace("$", "");
-		// sync.get needs is async and element needs to be changed inside method
-        chrome.storage.sync.get(['income'], function (result) {
-            var wage = result.income / WEEKS / HOURS;
-            var converted = (Math.floor(costInt / wage) + " hours, " + Math.floor(costInt % wage * 60 / wage) + " minutes");
-            elem.innerText = elem.innerText.replace(dollarRegex, converted);
-			})
+    if (dollarRegex.test(elem.innerText) && !badTagRegex.test(elem.tagName) && (goodTagRegex.test(elem.tagName) || elem.childElementCount == 0)) {
+        // get price and convert to number
+        for ( var i in elem.innerText.match(dollarRegexAll)){
+            var cost = elem.innerText.match(dollarRegexAll)[i];
+            var costInt = cost.replace("$", "");
+            // sync.get needs is async and element needs to be changed inside method
+            chrome.storage.sync.get(['income'], function (result) {
+                var wage = result.income / WEEKS / HOURS;
+                var converted = (Math.floor(costInt / wage) + " hours, " + Math.floor(costInt % wage * 60 / wage) + " minutes");
+                elem.innerText = elem.innerText.replace(cost, converted);
+                })
+            }
+        } else if(altRegex.test(elem.innerText) && !badTRegex.test(elem.tagName) && (goodTagRegex.test(elem.tagName) ||  elem.childElementCount == 0)) {
+            
+            // get price and convert to number
+            for ( var i in elem.innerText.match(altRegexAll)){
+                var cost = elem.innerText.match(altRegexAll)[i];
+                var costInt = cost.replace("$", "").trim().replace(/\s/, ".");
+                // sync.get needs is async and element needs to be changed inside method
+                chrome.storage.sync.get(['income'], function (result) {
+                    var wage = result.income / WEEKS / HOURS;
+                    var converted = (Math.floor(costInt / wage) + " hours, " + Math.floor(costInt % wage * 60 / wage) + " minutes");
+                    elem.innerText = elem.innerText.replace(cost, converted);
+                    })
+                }
+            }
         }
-}
 
 
 
 
 //map all elements to convert monetary values within
 const convertElements = function (node) {
-    var allElements = node.getElementsByTagName("*")
-    for (var i = 0; i < allElements.length; i++) {
-        convertMoney(allElements[i]);
+    if (node.hasChildNodes()){
+        var allElements = node.getElementsByTagName("*")
+        for (var i = 0; i < allElements.length; i++) {
+            convertMoney(allElements[i]);
+        }
+    }else{
+        convertMoney(node);
     }
 }
 
