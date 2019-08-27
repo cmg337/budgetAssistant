@@ -9,6 +9,9 @@ chrome.runtime.onInstalled.addListener(function () {
     chrome.storage.sync.set({ savings: 10000 }, function () {
         console.log("Default Savings Goal set");
     });
+    chrome.storage.sync.set({ mode: "time" }, function () {
+        console.log("Mode set")
+    });
 });
 
 

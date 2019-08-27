@@ -1,6 +1,6 @@
 {
   "name": "Budget Master",
-  "version": "0.2",
+  "version": "1.0",
   "description": "Converts prices on websites to percentage of dipsosable income, weekly budget, or hours of work",
   "permissions": [
     "activeTab",

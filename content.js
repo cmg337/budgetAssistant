@@ -1,91 +1,75 @@
-const WEEKS = 52
-const HOURS = 40
+const WEEKS = 52;
+const HOURS = 40;
+const MONTHS = 12;
 
 
-//function that changes element monetary values if it contains any
-convertMoney = function (elem) {
+//converts money value and returns desired output
+const convertMoney = function (target, field, regex) {
+    chrome.storage.sync.get(['income', 'mode', 'savings', 'rent'], function (backendData) {
+        var replacements = {};//use object to keep track of values if multiple
+        // get price and convert to number
+        for (var i in target[field].match(regex)) {//loop through all matches in element
+            var cost = target[field].match(regex)[i];
+            var costInt = cost.replace(/[\$,]/g, "").trim().replace(/\s/, ".");
+            replacements[cost] = costInt;
+        }
+        //convert values based on mode
+        for (var i in Object.keys(replacements)) {
+            var cost = Object.keys(replacements)[i];
+            var costInt = replacements[cost];
+            var wage = backendData.income / WEEKS / HOURS;
+            var expendable = backendData.income - backendData.rent * MONTHS - backendData.savings;
+            switch (backendData.mode) {
+                case "time":
+                    var converted = Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
+                    target[field] = target[field].replace(cost, converted);
+                    break;
+                case "week":
+                    var converted = Math.floor(costInt / (expendable / WEEKS) * 100) + "%";
+                    target[field] = target[field].replace(cost, converted);
+                    break;
+                case "month":
+                    var converted = Math.floor(costInt / (expendable / MONTHS) * 100) + "%";
+                    target[field] = target[field].replace(cost, converted);
+                    break;
+            }
+        }
+    })
+}
+//changes element monetary values if it contains any
+const convertElement = function (elem) {
     //reg exp for monetary values
-    var dollarRegex = /\$[0-9]+(\.[0-9][0-9])?/
-    var dollarRegexAll = /\$[0-9]+(\.[0-9][0-9])?/g
-    var altRegex = /\$\s[0-9]+(\s[0-9][0-9])?/
-    var altRegexAll = /\$\s[0-9]+(\s[0-9][0-9])?/g
+    var dollarRegex = /\$[,0-9]+(\.[0-9][0-9])?/g
+    var altDollarRegex = /\$\s[,0-9]+(\s[0-9][0-9])?/g
+    //avoid targeting these tags
     var badTagRegex = /img|script/i
-    
 
-    // if textContent matches regex - disclude containers of any kind scripts and images
-    if ((dollarRegex.test(elem.innerText) || altRegex.test(elem.innerText)) && !badTagRegex.test(elem.tagName) && childrenAreText(elem)) {
-        // sync.get needs is async and element needs to be changed inside method
-        chrome.storage.sync.get(['income'], function (result) {
-            var replacements = {};//use object to keep track of values if multiple
-            // get price and convert to number
-            if (dollarRegex.test(elem.innerText)) {
-
-                for (var i in elem.innerText.match(dollarRegexAll)) {//loop through all matches in element
-                    var cost = elem.innerText.match(dollarRegexAll)[i];
-                    var costInt = cost.replace("$", "");
-                    replacements[cost] = costInt;
-                }
-            } else {
-                for (var i in elem.innerText.match(altRegexAll)) {//loop through all matches in element
-                    var cost = elem.innerText.match(altRegexAll)[i];
-                    var costInt = cost.replace("$", "").trim().replace(/\s/, ".");
-                    replacements[cost] = costInt;
-                }
-            }
-
-
-            for (var i in Object.keys(replacements)) {
-                var cost = Object.keys(replacements)[i];
-                var costInt = replacements[cost];
-                var wage = result.income / WEEKS / HOURS;
-                var converted = (Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min");
-                elem.innerText = elem.innerText.replace(cost, converted);
-            }
-        })
-    } //need to use textContent for hidden elements
-    ///This should be refactored later to avoid copypaste
-    else if ((dollarRegex.test(elem.textContent) || altRegex.test(elem.textContent)) && !badTagRegex.test(elem.tagName) && childrenAreText(elem)) {
-        // sync.get needs is async and element needs to be changed inside method
-        chrome.storage.sync.get(['income'], function (result) {
-            var replacements = {};//use object to keep track of values if multiple
-            // get price and convert to number
-            if (dollarRegex.test(elem.textContent)) {
-
-                for (var i in elem.textContent.match(dollarRegexAll)) {//loop through all matches in element
-                    var cost = elem.textContent.match(dollarRegexAll)[i];
-                    var costInt = cost.replace("$", "");
-                    replacements[cost] = costInt;
-                }
-            } else {
-                for (var i in elem.textContent.match(altRegexAll)) {//loop through all matches in element
-                    var cost = elem.textContent.match(altRegexAll)[i];
-                    var costInt = cost.replace("$", "").trim().replace(/\s/, ".");
-                    replacements[cost] = costInt;
-                }
-            }
-
-
-            for (var i in Object.keys(replacements)) {
-                var cost = Object.keys(replacements)[i];
-                var costInt = replacements[cost];
-                var wage = result.income / WEEKS / HOURS;
-                var converted = (Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min");
-                elem.textContent = elem.textContent.replace(cost, converted);
-            }
-        })
+    //elements with good tags and text children only
+    if (!badTagRegex.test(elem.tagName) && childrenAreText(elem)) {
+        //check if innertext matches either regex
+        if (dollarRegex.test(elem.innerText)) {
+            convertMoney(elem, "innerText", dollarRegex);
+        } else if (altDollarRegex.test(elem.innerText)) {
+            convertMoney(elem, "innerText", altDollarRegex);
+        }
+        // check textContent for hidden elements - innertext will be blank
+        else if (dollarRegex.test(elem.textContent)) {
+            convertMoney(elem, "textContent", dollarRegex);
+        } else if (altDollarRegex.test(elem.textContent)) {
+            convertMoney(elem, "textContent", altDollarRegex);
+        }
     }
 }
 
 //checks if element inner text can be replaced based on child node tags
 const childrenAreText = function (elem) {
-    var goodTagRegex = /span|strong|b/i;
+    var goodTagRegex = /span|strong|^b$/i;
     if (elem.childElementCount == 0) {//0 children good
         return true
     };
     if (!goodTagRegex.test(elem.tagName)) {//must have good tag
         return false
     };
-
     var checker = true;//set outside var to true -check children with foreach
     elem.childNodes.forEach((child) => {//children have good tags or are text
         if (! (goodTagRegex.test(child.tagName) || child.nodeType == 3)) { checker = false }
@@ -100,10 +84,10 @@ const convertElements = function (node) {
     if (node.childElementCount > 0){
         var allElements = node.querySelectorAll("*")
         for (var i = 0; i < allElements.length; i++) {
-            convertMoney(allElements[i]);
+            convertElement(allElements[i]);
         }
     }else{
-        convertMoney(node);
+        convertElement(node);
     }
 }
 
