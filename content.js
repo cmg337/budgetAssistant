@@ -39,29 +39,24 @@ const convertMoney = function (target, field, regex) {
 //changes element monetary values if it contains any
 const convertElement = function (elem) {
     //reg exp for monetary values
-    var dollarRegex = /\$[,0-9]+(\.[0-9][0-9])?/g
-    var altDollarRegex = /\$\s[,0-9]+(\s[0-9][0-9])?/g
+    var dollarRegex = /\$(\s)?[,0-9]+(\s)?(.)?(\s)?([0-9][0-9])?/g
     //avoid targeting these tags
     var badTagRegex = /img|script/i
 
     //elements with good tags and text children only
-    if (!badTagRegex.test(elem.tagName) && childrenAreText(elem)) {
+    if (!badTagRegex.test(elem.tagName) && childrenAreText(elem) ) {
         //check if innertext matches either regex
-        if (dollarRegex.test(elem.innerText)) {
+        if (dollarRegex.test(elem.innerText) && checkChildrenInnerText(elem, dollarRegex)) { //check children to not overwrite too much
             convertMoney(elem, "innerText", dollarRegex);
-        } else if (altDollarRegex.test(elem.innerText)) {
-            convertMoney(elem, "innerText", altDollarRegex);
         }
         // check textContent for hidden elements - innertext will be blank
-        else if (dollarRegex.test(elem.textContent)) {
+        else if (dollarRegex.test(elem.textContent) && checkChildrenInnerText(elem, dollarRegex)) {
             convertMoney(elem, "textContent", dollarRegex);
-        } else if (altDollarRegex.test(elem.textContent)) {
-            convertMoney(elem, "textContent", altDollarRegex);
         }
     }
 }
 
-//checks if element inner text can be replaced based on child node tags
+// return true if children have tags indicating text only
 const childrenAreText = function (elem) {
     var goodTagRegex = /span|strong|^b$/i;
     if (elem.childElementCount == 0) {//0 children good
@@ -75,6 +70,19 @@ const childrenAreText = function (elem) {
         if (! (goodTagRegex.test(child.tagName) || child.nodeType == 3)) { checker = false }
     })
     return checker;
+}
+
+//returns true if all children fail regex test
+const checkChildrenInnerText = function (elem, regex) {
+    for (var i in elem.children) {
+        //console.log(elem.children[i].innerText)
+        //console.log(regex.test(elem.children[i].innerText))
+        if (regex.test(elem.children[i].innerText) && (elem.children[i].innerText).match(regex)[0] == elem.innerText.match(regex)[0]) {
+            console.log(elem)
+            return false
+        }
+    }
+    return true;
 }
 
 
