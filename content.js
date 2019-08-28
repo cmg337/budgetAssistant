@@ -10,7 +10,12 @@ const convertMoney = function (target, field, regex) {
         // get price and convert to number
         for (var i in target[field].match(regex)) {//loop through all matches in element
             var cost = target[field].match(regex)[i];
-            var costInt = cost.replace(/[\$,]/g, "").trim().replace(/\s/, ".");
+            var costInt = cost.replace(/[\$,]/g, "").trim()
+            if (!/\./.test(costInt) && /\s/.test(costInt)) {
+                costInt = costInt.replace(/\s/g, "");//replace space with decimal if none
+            } 
+            costInt = costInt.replace(/\s/g, "");//remove spaces
+            console.log(costInt)
             replacements[cost] = costInt;
         }
         //convert values based on mode
@@ -39,7 +44,7 @@ const convertMoney = function (target, field, regex) {
 //changes element monetary values if it contains any
 const convertElement = function (elem) {
     //reg exp for monetary values
-    var dollarRegex = /\$(\s)?[,0-9]+(\s)?(.)?(\s)?([0-9][0-9])?/g
+    var dollarRegex = /\$(\s)?[,0-9]+(\s)?(\.)?(\s)?([0-9][0-9])?/g
     //avoid targeting these tags
     var badTagRegex = /img|script/i
 
@@ -75,11 +80,12 @@ const childrenAreText = function (elem) {
 //returns true if all children fail regex test
 const checkChildrenInnerText = function (elem, regex) {
     for (var i in elem.children) {
-        //console.log(elem.children[i].innerText)
-        //console.log(regex.test(elem.children[i].innerText))
+        regex.test(elem.children[i].innerText);//using regex.test twice fixes bug where duplicate values show on amazon search page
+        //this should be investigated later 
+
+        //child has to match regex and be the same match as parent
         if (regex.test(elem.children[i].innerText) && (elem.children[i].innerText).match(regex)[0] == elem.innerText.match(regex)[0]) {
-            console.log(elem)
-            return false
+            return false;
         }
     }
     return true;
