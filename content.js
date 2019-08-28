@@ -10,7 +10,12 @@ const convertMoney = function (target, field, regex) {
         // get price and convert to number
         for (var i in target[field].match(regex)) {//loop through all matches in element
             var cost = target[field].match(regex)[i];
-            var costInt = cost.replace(/[\$,]/g, "").trim().replace(/\s/, ".");
+            var costInt = cost.replace(/[\$,]/g, "").trim()
+            if (!/\./.test(costInt) && /\s/.test(costInt)) {
+                costInt = costInt.replace(/\s/g, "");//replace space with decimal if none
+            } 
+            costInt = costInt.replace(/\s/g, "");//remove spaces
+            console.log(costInt)
             replacements[cost] = costInt;
         }
         //convert values based on mode
@@ -39,29 +44,24 @@ const convertMoney = function (target, field, regex) {
 //changes element monetary values if it contains any
 const convertElement = function (elem) {
     //reg exp for monetary values
-    var dollarRegex = /\$[,0-9]+(\.[0-9][0-9])?/g
-    var altDollarRegex = /\$\s[,0-9]+(\s[0-9][0-9])?/g
+    var dollarRegex = /\$(\s)?[,0-9]+(\s)?(\.)?(\s)?([0-9][0-9])?/g
     //avoid targeting these tags
     var badTagRegex = /img|script/i
 
     //elements with good tags and text children only
-    if (!badTagRegex.test(elem.tagName) && childrenAreText(elem)) {
+    if (!badTagRegex.test(elem.tagName) && childrenAreText(elem) ) {
         //check if innertext matches either regex
-        if (dollarRegex.test(elem.innerText)) {
+        if (dollarRegex.test(elem.innerText) && checkChildrenInnerText(elem, dollarRegex)) { //check children to not overwrite too much
             convertMoney(elem, "innerText", dollarRegex);
-        } else if (altDollarRegex.test(elem.innerText)) {
-            convertMoney(elem, "innerText", altDollarRegex);
         }
         // check textContent for hidden elements - innertext will be blank
-        else if (dollarRegex.test(elem.textContent)) {
+        else if (dollarRegex.test(elem.textContent) && checkChildrenInnerText(elem, dollarRegex)) {
             convertMoney(elem, "textContent", dollarRegex);
-        } else if (altDollarRegex.test(elem.textContent)) {
-            convertMoney(elem, "textContent", altDollarRegex);
         }
     }
 }
 
-//checks if element inner text can be replaced based on child node tags
+// return true if children have tags indicating text only
 const childrenAreText = function (elem) {
     var goodTagRegex = /span|strong|^b$/i;
     if (elem.childElementCount == 0) {//0 children good
@@ -75,6 +75,20 @@ const childrenAreText = function (elem) {
         if (! (goodTagRegex.test(child.tagName) || child.nodeType == 3)) { checker = false }
     })
     return checker;
+}
+
+//returns true if all children fail regex test
+const checkChildrenInnerText = function (elem, regex) {
+    for (var i in elem.children) {
+        regex.test(elem.children[i].innerText);//using regex.test twice fixes bug where duplicate values show on amazon search page
+        //this should be investigated later 
+
+        //child has to match regex and be the same match as parent
+        if (regex.test(elem.children[i].innerText) && (elem.children[i].innerText).match(regex)[0] == elem.innerText.match(regex)[0]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 
