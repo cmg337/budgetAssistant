@@ -7,9 +7,17 @@
 <body>
     <div id="container">
         <div><h2 class="center"> Budget Master </h2></div>
-        <div>Annual Income: <input id="income" type="number"></div>
+        <div>Annual Income after Tax: <input id="income" type="number"></div>
         <div>Monthly Rent + Utilities: <input id="rent" type="number"></div>
         <div>Annual Saving Goal: <input id="savings" type="number"></div>
+        <label>
+            Select Budget Mode
+            <select id="mode">
+                <option value="time">Hours of Work Required</option>
+                <option value="week">Percentage of Weekly Budget</option>
+                <option value="month">Percentage of Montly Budget</option>
+            </select>
+        </label>
         <button id="saveButton">Save Changes</button>
     </div>
 </body>
