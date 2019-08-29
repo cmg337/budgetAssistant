@@ -24,9 +24,14 @@ const convertMoney = function (target, field, regex) {
             var costInt = replacements[cost];
             var wage = backendData.income / WEEKS / HOURS;
             var expendable = backendData.income - backendData.rent * MONTHS - backendData.savings;
+            var expendableWage = expendable / WEEKS / HOURS;
             switch (backendData.mode) {
                 case "time":
                     var converted = Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
+                    target[field] = target[field].replace(cost, converted);
+                    break;
+                case "timeBudget":
+                    var converted = Math.floor(costInt / expendableWage) + " hr " + Math.floor(costInt % expendableWage * 60 / expendableWage) + " min";
                     target[field] = target[field].replace(cost, converted);
                     break;
                 case "week":

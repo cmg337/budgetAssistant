@@ -20,7 +20,11 @@ window.onload = function () {
         chrome.storage.sync.set({ mode: document.getElementById("mode").value }, function () {
             console.log("Mode changed");
         })
-        document.getElementById("container").appendChild(document.createElement("p")).textContent = "Saved"
+        document.getElementById("saved").textContent = "";
+        setTimeout(() => {//50ms delay to indicate multiple saves
+            document.getElementById("saved").textContent = "Saved. Refresh page to see changes."
+        }, 50);
+        
     })
 }
     
