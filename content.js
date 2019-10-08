@@ -15,7 +15,6 @@ const convertMoney = function (target, field, regex) {
                 costInt = costInt.replace(/\s/g, "");//replace space with decimal if none
             } 
             costInt = costInt.replace(/\s/g, "");//remove spaces
-            console.log(costInt)
             replacements[cost] = costInt;
         }
         //convert values based on mode
@@ -25,24 +24,30 @@ const convertMoney = function (target, field, regex) {
             var wage = backendData.income / WEEKS / HOURS;
             var expendable = backendData.income - backendData.rent * MONTHS - backendData.savings;
             var expendableWage = expendable / WEEKS / HOURS;
+            var converted;
             switch (backendData.mode) {
                 case "time":
-                    var converted = Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
-                    target[field] = target[field].replace(cost, converted);
+                    if (costInt / wage > 24) {
+                        converted = Math.floor(costInt / wage / 24) + "day(s) " + Math.floor(costInt / wage % 24) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
+                    } else {
+                        converted = Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
+                    }
                     break;
                 case "timeBudget":
-                    var converted = Math.floor(costInt / expendableWage) + " hr " + Math.floor(costInt % expendableWage * 60 / expendableWage) + " min";
-                    target[field] = target[field].replace(cost, converted);
+                    if (costInt / wage > 24) {
+                        converted = Math.floor(costInt / expendableWage / 24) + "day(s) " + Math.floor(costInt / expendableWage % 24) + " hr " + Math.floor(costInt % expendableWage * 60 / expendableWage) + " min";
+                    } else {
+                        converted = Math.floor(costInt / expendableWage) + " hr " + Math.floor(costInt % expendableWage * 60 / expendableWage) + " min";
+                    }
                     break;
                 case "week":
-                    var converted = Math.floor(costInt / (expendable / WEEKS) * 100) + "%";
-                    target[field] = target[field].replace(cost, converted);
+                    converted = Math.floor(costInt / (expendable / WEEKS) * 100) + "%";
                     break;
                 case "month":
-                    var converted = Math.floor(costInt / (expendable / MONTHS) * 100) + "%";
-                    target[field] = target[field].replace(cost, converted);
-                    break;
+                    converted = Math.floor(costInt / (expendable / MONTHS) * 100) + "%";
+                    break; 
             }
+            target[field] = target[field].replace(cost, converted);
         }
     })
 }
