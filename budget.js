@@ -1,6 +1,6 @@
 window.onload = function () {
 
-    chrome.storage.sync.get(['rent', 'income', 'savings', 'mode'], function (result) {
+    chrome.storage.sync.get(['rent', 'income', 'savings', 'mode', 'currency'], function (result) {
         for (var i in Object.keys(result)) {
             document.getElementById(Object.keys(result)[i]).value = result[Object.keys(result)[i]]
         }
@@ -19,6 +19,9 @@ window.onload = function () {
         });
         chrome.storage.sync.set({ mode: document.getElementById("mode").value }, function () {
             console.log("Mode changed");
+        })
+        chrome.storage.sync.set({ currency: document.getElementById("currency").value }, function () {
+            console.log("Currency changed");
         })
         document.getElementById("saved").textContent = "";
         setTimeout(() => {//50ms delay to indicate multiple saves

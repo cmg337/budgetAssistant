@@ -43,9 +43,9 @@
 <body>
     <div class="container">
         <div><h2 class="header"> Budget Assistant </h2></div>
-        <div>Annual Income after Tax: <input id="income" type="number" ></div>
-        <div>Monthly Rent + Utilities: <input id="rent" type="number" ></div>
-        <div>Annual Saving Goal: <input id="savings" type="number" ></div>
+        <div>Annual Income after Tax: <input id="income" type="number"></div>
+        <div>Monthly Rent + Utilities: <input id="rent" type="number"></div>
+        <div>Annual Saving Goal: <input id="savings" type="number"></div>
         <label class="field">
             Select Budget Mode
             <select id="mode">
@@ -53,6 +53,14 @@
                 <option value="timeBudget">Hours of Work Required - Budget Adjusted</option>
                 <option value="week">Percentage of Weekly Budget</option>
                 <option value="month">Percentage of Montly Budget</option>
+            </select>
+        </label>
+        <label class="field">
+            Currency
+            <select id="currency">
+                <option value="\$">US Dollars</option>
+                <option value="€">Euros</option>
+                <option value="£">British Pounds</option>
             </select>
         </label>
         <button id="saveButton">Save Changes</button>
