@@ -1,24 +1,72 @@
 <html>
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Lobster&display=swap" rel="stylesheet">
     <script src="budget.js"></script>
-    <link src="style.css" rel="stylesheet" />
+    <style>
+        body{
+            background-color: rgb(176, 234, 202);
+        }
+        .container{
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+        }
+        .container * {
+            margin: 3px 0;
+            font-size: 14px;
+        }
+        .header {
+            text-align: center;
+            font-size: 22px;
+            font-family: 'Lobster', cursive;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            /*background-color: rgb(204, 242, 221);*/
+        }
+        #saveButton {
+            width: 140px;
+            height: 30px;
+            align-self: center;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        #saved{
+            margin-top: 20px;
+            text-align: center;
+            font-style: oblique;
+        }
+    </style>
 </head>
 <body>
-    <div id="container">
-        <div><h2 class="center"> Budget Assistant </h2></div>
+    <div class="container">
+        <div><h2 class="header"> Budget Assistant </h2></div>
         <div>Annual Income after Tax: <input id="income" type="number"></div>
         <div>Monthly Rent + Utilities: <input id="rent" type="number"></div>
         <div>Annual Saving Goal: <input id="savings" type="number"></div>
-        <label>
+        <label class="field">
             Select Budget Mode
             <select id="mode">
                 <option value="time">Hours of Work Required</option>
+                <option value="timeBudget">Hours of Work Required - Budget Adjusted</option>
                 <option value="week">Percentage of Weekly Budget</option>
                 <option value="month">Percentage of Montly Budget</option>
             </select>
         </label>
+        <label class="field">
+            Currency
+            <select id="currency">
+                <option value="\$">US Dollars</option>
+                <option value="€">Euros</option>
+                <option value="£">British Pounds</option>
+            </select>
+        </label>
         <button id="saveButton">Save Changes</button>
+        <div id="saved-container">
+            <p id="saved"></p>
+        </div>
     </div>
 </body>
 </html>

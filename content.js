@@ -5,17 +5,17 @@ const MONTHS = 12;
 
 //converts money value and returns desired output
 const convertMoney = function (target, field, regex) {
-    chrome.storage.sync.get(['income', 'mode', 'savings', 'rent'], function (backendData) {
+    chrome.storage.sync.get(['income', 'mode', 'savings', 'rent', 'currency'], function (backendData) {
         var replacements = {};//use object to keep track of values if multiple
         // get price and convert to number
         for (var i in target[field].match(regex)) {//loop through all matches in element
             var cost = target[field].match(regex)[i];
-            var costInt = cost.replace(/[\$,]/g, "").trim()
+            var curRegex = new RegExp("[" + backendData.currency + ",]", "g")
+            var costInt = cost.replace(curRegex, "").trim()
             if (!/\./.test(costInt) && /\s/.test(costInt)) {
                 costInt = costInt.replace(/\s/g, "");//replace space with decimal if none
             } 
             costInt = costInt.replace(/\s/g, "");//remove spaces
-            console.log(costInt)
             replacements[cost] = costInt;
         }
         //convert values based on mode
@@ -24,41 +24,54 @@ const convertMoney = function (target, field, regex) {
             var costInt = replacements[cost];
             var wage = backendData.income / WEEKS / HOURS;
             var expendable = backendData.income - backendData.rent * MONTHS - backendData.savings;
+            var expendableWage = expendable / WEEKS / HOURS;
+            var converted;
             switch (backendData.mode) {
                 case "time":
-                    var converted = Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
-                    target[field] = target[field].replace(cost, converted);
+                    if (costInt / wage > 24) {
+                        converted = Math.floor(costInt / wage / 24) + " day(s) " + Math.floor(costInt / wage % 24) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
+                    } else {
+                        converted = Math.floor(costInt / wage) + " hr " + Math.floor(costInt % wage * 60 / wage) + " min";
+                    }
+                    break;
+                case "timeBudget":
+                    if (costInt / wage > 24) {
+                        converted = Math.floor(costInt / expendableWage / 24) + " day(s) " + Math.floor(costInt / expendableWage % 24) + " hr " + Math.floor(costInt % expendableWage * 60 / expendableWage) + " min";
+                    } else {
+                        converted = Math.floor(costInt / expendableWage) + " hr " + Math.floor(costInt % expendableWage * 60 / expendableWage) + " min";
+                    }
                     break;
                 case "week":
-                    var converted = Math.floor(costInt / (expendable / WEEKS) * 100) + "%";
-                    target[field] = target[field].replace(cost, converted);
+                    converted = Math.floor(costInt / (expendable / WEEKS) * 100) + "%";
                     break;
                 case "month":
-                    var converted = Math.floor(costInt / (expendable / MONTHS) * 100) + "%";
-                    target[field] = target[field].replace(cost, converted);
-                    break;
+                    converted = Math.floor(costInt / (expendable / MONTHS) * 100) + "%";
+                    break; 
             }
+            target[field] = target[field].replace(cost, converted);
         }
     })
 }
 //changes element monetary values if it contains any
 const convertElement = function (elem) {
-    //reg exp for monetary values
-    var dollarRegex = /\$(\s)?[,0-9]+(\s)?(\.)?(\s)?([0-9][0-9])?/g
-    //avoid targeting these tags
-    var badTagRegex = /img|script/i
+    chrome.storage.sync.get(['currency'], function (backendData) {
+        //reg exp for monetary values
+        var curRegex = new RegExp(  backendData.currency + "(\s)?[,0-9]+(\s)?(\.)?(\s)?([0-9][0-9])?", "g")
+        //avoid targeting these tags
+        var badTagRegex = /img|script/i
 
-    //elements with good tags and text children only
-    if (!badTagRegex.test(elem.tagName) && childrenAreText(elem) ) {
-        //check if innertext matches either regex
-        if (dollarRegex.test(elem.innerText) && checkChildrenInnerText(elem, dollarRegex)) { //check children to not overwrite too much
-            convertMoney(elem, "innerText", dollarRegex);
+        //elements with good tags and text children only
+        if (!badTagRegex.test(elem.tagName) && childrenAreText(elem)) {
+            //check if innertext matches either regex
+            if (curRegex.test(elem.innerText) && checkChildrenInnerText(elem, curRegex)) { //check children to not overwrite too much
+                convertMoney(elem, "innerText", curRegex);
+            }
+            // check textContent for hidden elements - innertext will be blank
+            else if (curRegex.test(elem.textContent) && checkChildrenInnerText(elem, curRegex)) {
+                convertMoney(elem, "textContent", curRegex);
+            }
         }
-        // check textContent for hidden elements - innertext will be blank
-        else if (dollarRegex.test(elem.textContent) && checkChildrenInnerText(elem, dollarRegex)) {
-            convertMoney(elem, "textContent", dollarRegex);
-        }
-    }
+    })
 }
 
 // return true if children have tags indicating text only
